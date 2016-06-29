@@ -104,45 +104,53 @@ apiRoutes.post('/signup', function(req, res) {
 // route to authenticate a user (POST http://localhost:8080/api/authenticate)
 apiRoutes.post('/authenticate', function(req, res) {
 
-  // find the user
-  User.findOne({
-    email: req.body.email
-  }, function(err, user) {
+  if (req.body && req.body.email && req.body.password) {
 
-    if (err) throw err;
+    // find the user
+    User.findOne({
+      email: req.body.email
+    }, function(err, user) {
 
-    if (!user) {
-      res.json({ success: false, message: 'Authentication failed. User not found.' });
-    } else if (user) {
+      if (err) throw err;
 
-      // check if password matches
-      
-      if (!bCrypt.compareSync(req.body.password,user.get('password'))) {
-        res.json({ success: false, message: 'Authentication failed. Wrong password.' });
-      } else {
+      if (!user) {
+        res.json({ success: false, message: 'Authentication failed. User not found.' });
+      } else if (user) {
 
-        var payload = {
-          email : user.email,
-          username  : user.username
-        }
+        // check if password matches
+        
+        if (!bCrypt.compareSync(req.body.password,user.get('password'))) {
+          res.json({ success: false, message: 'Authentication failed. Wrong password.' });
+        } else {
 
-        // if user is found and password is right
-        // create a token
-        var token = jwt.sign(payload, app.get('superSecret'), {
-          expiresIn: "24 hours" // expires in 24 hours
-        });
+          var payload = {
+            email : user.email,
+            username  : user.username
+          }
 
-        // return the information including token as JSON
-        res.json({
-          success: true,
-          message: 'Enjoy your token!',
-          token: token
-        });
-      }   
+          // if user is found and password is right
+          // create a token
+          var token = jwt.sign(payload, app.get('superSecret'), {
+            expiresIn: "24 hours" // expires in 24 hours
+          });
 
-    }
+          // return the information including token as JSON
+          res.json({
+            success: true,
+            message: 'Enjoy your token!',
+            token: token
+          });
+        }   
 
-  });
+      }
+
+    });
+
+  } else {
+    res.json({ success: false, message: 'Must provide email & password to authenticate' });
+  }
+
+
 });
 
 // route middleware to verify a token
