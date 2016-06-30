@@ -87,7 +87,7 @@ app.post('/signup', function(req, res) {
       // already exists
       else if (user) {
           console.log('User already exists with username: '+username);
-          return done(null, false, req.flash('message','User Already Exists'));
+          res.json({ success: false, message: 'There is already a user with this email'});
       } else {
           // if there is no user with that email
           // Check that the username is not taken
