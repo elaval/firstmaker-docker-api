@@ -16,10 +16,13 @@ var Device   = require('./app/models/device'); // get our mongoose model
 // =======================
 // configuration =========
 // =======================
+// Get config variables from ENVIRONMENT or from defaut config file
+var jwtSecret = process.env.JWT_SECRET || config.secret;
+var mongoDb = process.env.MONGO_DATABASE || config.database;
+
 var port = process.env.PORT || 8080; // used to create, sign, and verify tokens
-mongoose.connect(config.database); // connect to database
-app.set('superSecret', config.secret); // secret variable
-var apiUrl = config.apiUrl;
+mongoose.connect(mongoDb); // connect to database
+app.set('superSecret', jwtSecret); // secret variable
 
 // use body parser so we can get info from POST and/or URL parameters
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -28,80 +31,81 @@ app.use(bodyParser.json());
 // use morgan to log requests to the console
 app.use(morgan('dev'));
 
-// =======================
-// routes ================
-// =======================
-
-app.get('/setup', function(req, res) {
-
-  // create a sample user
-  var nick = new User({ 
-    name: 'Nick Cerminara', 
-    password: 'password',
-    admin: true 
-  });
-
-  // save the sample user
-  nick.save(function(err) {
-    if (err) throw err;
-
-    console.log('User saved successfully');
-    res.json({ success: true });
-  });
-});
-
-// get an instance of the router for api routes
-var apiRoutes = express.Router(); 
-
 // Generates hash using bCrypt
 var createHash = function(password){
     return bCrypt.hashSync(password, bCrypt.genSaltSync(10), null);
 }
 
-// route to authenticate a user (POST http://localhost:8080/api/authenticate)
-apiRoutes.post('/signup', function(req, res) {
+// =======================
+// routes ================
+// =======================
+
+// get an instance of the router for api routes
+var apiRoutes = express.Router(); 
+
+// route to register a new user (POST http://localhost:8080/signup)
+app.post('/signup', function(req, res) {
   var username = req.body.username,
     password = req.body.password,
     email = req.body.email;
 
-  // find the user
-  User.findOne({
-    email: email
-  }, function(err, user) {
+  if (username && email && password) {
+   // find the user
+    User.findOne({
+      email: email
+    }, function(err, user) {
 
-    // In case of any error, return using the done method
-    if (err){
-        console.log('Error in SignUp: '+err);
-        res.json({ success: false, message: 'Error in SignUp: '+err });
-    }
-    // already exists
-    if (user) {
-        console.log('User already exists with username: '+username);
-        return done(null, false, req.flash('message','User Already Exists'));
-    } else {
-        // if there is no user with that email
-        // create the user
-        var newUser = new User();
+      // In case of any error, return using the done method
+      if (err){
+          console.log('Error in SignUp: '+err);
+          res.json({ success: false, message: 'Error in SignUp: '+err });
+      }
+      // already exists
+      else if (user) {
+          console.log('User already exists with username: '+username);
+          return done(null, false, req.flash('message','User Already Exists'));
+      } else {
+          // if there is no user with that email
+          // Check that the username is not taken
+          User.findOne({
+            username: username
+          }, function(err, user) {
+            if (err) {
+              res.json({ success: false, message: 'Error in SignUp: '+err });
+            } else if (user) {
+              res.json({ success: false, message: 'Username "'+username+'" already exists'});
+            } else {
+              // create the user
+              var newUser = new User();
 
-        // set the user's local credentials
-        newUser.username = username;
-        newUser.password = createHash(password);
-        newUser.email = email;
+              // set the user's local credentials
+              newUser.username = username;
+              newUser.password = createHash(password);
+              newUser.email = email;
 
-        // save the user
-        newUser.save(function(err) {
-            if (err){
-                console.log('Error in Saving user: '+err);  
-                res.json({ success: false, message: 'Error in Saving user: '+err });
+              // save the user
+              newUser.save(function(err) {
+                  if (err){
+                      console.log('Error in Saving user: '+err);  
+                      res.json({ success: false, message: 'Error in Saving user: '+err });
+                  }
+                  console.log('User Registration succesful');   
+                  res.json({ success: true, message: 'User Registration succesful' });
+              });
             }
-            console.log('User Registration succesful');   
-            res.json({ success: true, message: 'User Registration succesful' });
-         });
-    }
-  });
+
+          })
+      }
+    });
+  } else {
+    res.json({ success: false, message: 'Must provide vaid email, username & password' });
+  }
+
+
 });
 
-// route to authenticate a user (POST http://localhost:8080/api/authenticate)
+// route to authenticate a user with email & password, retrieving a jwt token
+// (POST http://localhost:8080/authenticate)
 apiRoutes.post('/authenticate', function(req, res) {
 
   if (req.body && req.body.email && req.body.password) {
