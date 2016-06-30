@@ -1,3 +1,27 @@
+'use strict';
+
+/* Note: using staging server url, remove .testing() for production
+Using .testing() will overwrite the debug flag with true */ 
+var LEX = require('letsencrypt-express').testing();
+
+// Change these two lines!
+var DOMAIN = 'api.firstmakers.com';
+var EMAIL = 'ernesto.laval@gmail.com';
+
+var lex = LEX.create({
+  configDir: require('os').homedir() + '/letsencrypt/etc'
+, approveRegistration: function (hostname, approve) { // leave `null` to disable automatic registration
+    if (hostname === DOMAIN) { // Or check a database or list of allowed domains
+      approve(null, {
+        domains: [DOMAIN]
+      , email: EMAIL
+      , agreeTos: true
+      });
+    }
+  }
+});
+
+
 // =======================
 // get the packages we need ============
 // =======================
@@ -296,5 +320,11 @@ app.get('/', function(req, res) {
 // =======================
 // start the server ======
 // =======================
-app.listen(port);
-console.log('Magic happens at http://localhost:')
+//app.listen(port);
+lex.onRequest = app;
+
+lex.listen([8080], [8443, 5001], function () {
+  var protocol = ('requestCert' in this) ? 'https': 'http';
+  console.log("Listening at " + protocol + '://localhost:' + this.address().port);
+});
+//console.log('Magic happens at http://localhost:')

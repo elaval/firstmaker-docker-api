@@ -12,8 +12,8 @@
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
     "jsonwebtoken": "^7.0.1",
+    "letsencrypt-express": "^1.1.5",
     "mongoose": "^4.5.2",
     "morgan": "^1.7.0"
   }
 }
-
