@@ -2,7 +2,7 @@
 
 /* Note: using staging server url, remove .testing() for production
 Using .testing() will overwrite the debug flag with true */ 
-var LEX = require('letsencrypt-express'); //.testing();
+var LEX = require('letsencrypt-express')//.testing();
 
 // Change these two lines!
 var DOMAIN = 'api.firstmakers.com';
@@ -323,7 +323,7 @@ app.get('/', function(req, res) {
 //app.listen(port);
 lex.onRequest = app;
 
-lex.listen([8080], [8443, 5001], function () {
+lex.listen([80], [443, 5001], function () {
   var protocol = ('requestCert' in this) ? 'https': 'http';
   console.log("Listening at " + protocol + '://localhost:' + this.address().port);
 });
