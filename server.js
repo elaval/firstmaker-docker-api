@@ -2,7 +2,7 @@
 
 /* Note: using staging server url, remove .testing() for production
 Using .testing() will overwrite the debug flag with true */ 
-var LEX = require('letsencrypt-express').testing();
+var LEX = require('letsencrypt-express'); //.testing();
 
 // Change these two lines!
 var DOMAIN = 'api.firstmakers.com';
