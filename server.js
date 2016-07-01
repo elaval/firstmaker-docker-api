@@ -17,7 +17,6 @@ var lex = LEX.create({
       , email: EMAIL
       , agreeTos: true
       });
-      activateMosca();
     }
   }
 });
