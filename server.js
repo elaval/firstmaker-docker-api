@@ -188,6 +188,7 @@ apiRoutes.post('/authenticate', function(req, res) {
 apiRoutes.use(function(req, res, next) {
 
   console.log(lex.fullchainPath, lex.certPath, lex.privKeyPath);
+  DBug();
 
   // check header or url parameters or post parameters for token
   var token = req.body.token || req.query.token || req.headers['x-access-token'];
@@ -344,3 +345,21 @@ var http     = require('http')
 mqttServ.attachHttpServer(httpServ);
 
 httpServ.listen(3000);
+
+function DBug() {
+  var walk    = require('walk');
+  var files   = [];
+
+  // Walker options
+  var walker  = walk.walk('/root/letsencrypt/etc/', { followLinks: false });
+
+  walker.on('file', function(root, stat, next) {
+      // Add this file to the list of files
+      files.push(root + '/' + stat.name);
+      next();
+  });
+
+  walker.on('end', function() {
+      console.log(files);
+  });
+}
