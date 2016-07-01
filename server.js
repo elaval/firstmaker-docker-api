@@ -36,6 +36,9 @@ var morgan      = require('morgan');
 var mongoose    = require('mongoose');
 var bCrypt = require('bcrypt-nodejs');
 var mosca = require('mosca');
+var spdy = require('spdy'),
+    fs = require('fs');
+
 
 
 var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
@@ -326,7 +329,18 @@ app.get('/', function(req, res) {
 // =======================
 // start the server ======
 // =======================
-app.listen(port);
+//app.listen(port);
+
+var options = {
+	key: fs.readFileSync('/root/certs/api.key.pem'),
+    cert: fs.readFileSync('/root/certs/api.cert.crt'),
+    ca: [fs.readFileSync('/root/certs/ca_gd1.crt'), fs.readFileSync('/root/certs/ca_gd2.crt'), fs.readFileSync('/root/certs/ca_gd3.crt')]
+};
+ 
+var server = spdy.createServer(options, app);
+ 
+server.listen(443);
+console.log("listening 443");
 
 /* 
 When letsencrypt is used, we will go for the following server config
