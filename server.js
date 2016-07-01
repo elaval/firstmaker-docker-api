@@ -17,7 +17,7 @@ var lex = LEX.create({
       , email: EMAIL
       , agreeTos: true
       });
-      console.log(lex.fullchainPath, lex.certPath, lex.privKeyPath);
+      activateMosca();
     }
   }
 });
@@ -335,7 +335,7 @@ lex.listen([80], [443, 5001], function () {
 });
 //console.log('Magic happens at http://localhost:')
 
-
+/*
 
 var http     = require('http')
   , httpServ = http.createServer()
@@ -345,6 +345,7 @@ var http     = require('http')
 mqttServ.attachHttpServer(httpServ);
 
 httpServ.listen(3000);
+*/
 
 function DBug() {
   var walk    = require('walk');
@@ -362,4 +363,33 @@ function DBug() {
   walker.on('end', function() {
       console.log(files);
   });
+}
+
+var mosca = require('mosca')
+
+function activateMosca() {
+  //var SECURE_KEY = __dirname + '/../../test/secure/tls-key.pem';
+  //var SECURE_CERT = __dirname + '/../../test/secure/tls-cert.pem';
+  var SECURE_KEY = lex.privKeyPath.replace(":hostname", DOMAIN);
+  var SECURE_CERT = lex.certPath.replace(":hostname", DOMAIN);
+
+  var settings = {
+    port: 8443,
+    logger: {
+      name: "secureExample",
+      level: 40,
+    },
+    secure : { 
+      keyPath: SECURE_KEY,
+      certPath: SECURE_CERT,
+    }
+  };
+  var server = new mosca.Server(settings);
+  server.on('ready', setup);
+
+  // fired when the mqtt server is ready
+  function setup() {
+    console.log('Mosca server is up and running');
+    console.log(SECURE_KEY);
+  }
 }
