@@ -22,6 +22,8 @@ var lex = LEX.create({
   }
 });
 
+var mqttstarted = false;
+
 
 // =======================
 // get the packages we need ============
@@ -189,6 +191,11 @@ apiRoutes.use(function(req, res, next) {
 
   console.log(lex.fullchainPath, lex.certPath, lex.privKeyPath);
   DBug();
+
+  if (!mqttstarted) {
+    activateMosca();
+    mqttstarted = true;
+  }
 
   // check header or url parameters or post parameters for token
   var token = req.body.token || req.query.token || req.headers['x-access-token'];
