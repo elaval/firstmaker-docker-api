@@ -192,7 +192,7 @@ apiRoutes.use(function(req, res, next) {
   DBug();
 
   if (!mqttstarted) {
-    activateMosca();
+    //activateMosca();
     mqttstarted = true;
   }
 
