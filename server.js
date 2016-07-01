@@ -2,6 +2,10 @@
 
 /* Note: using staging server url, remove .testing() for production
 Using .testing() will overwrite the debug flag with true */ 
+/* 
+We will use letsencrypt soon ... currently experiencing some rate issues so 
+will use a bought certificate in the mean time 
+
 var LEX = require('letsencrypt-express');//.testing();
 
 // Change these two lines!
@@ -20,9 +24,7 @@ var lex = LEX.create({
     }
   }
 });
-
-var mqttstarted = false;
-
+*/
 
 // =======================
 // get the packages we need ============
@@ -188,14 +190,6 @@ apiRoutes.post('/authenticate', function(req, res) {
 // route middleware to verify a token
 apiRoutes.use(function(req, res, next) {
 
-  console.log(lex.fullchainPath, lex.certPath, lex.privKeyPath);
-  DBug();
-
-  if (!mqttstarted) {
-    //activateMosca();
-    mqttstarted = true;
-  }
-
   // check header or url parameters or post parameters for token
   var token = req.body.token || req.query.token || req.headers['x-access-token'];
 
@@ -332,70 +326,15 @@ app.get('/', function(req, res) {
 // =======================
 // start the server ======
 // =======================
-//app.listen(port);
+app.listen(port);
+
+/* 
+When letsencrypt is used, we will go for the following server config
 lex.onRequest = app;
 
 lex.listen([80], [443, 5001], function () {
   var protocol = ('requestCert' in this) ? 'https': 'http';
   console.log("Listening at " + protocol + '://localhost:' + this.address().port);
 });
-//console.log('Magic happens at http://localhost:')
-
-/*
-
-var http     = require('http')
-  , httpServ = http.createServer()
-  , mosca    = require('mosca')
-  , mqttServ = new mosca.Server({});
-
-mqttServ.attachHttpServer(httpServ);
-
-httpServ.listen(3000);
 */
 
-function DBug() {
-  var walk    = require('walk');
-  var files   = [];
-
-  // Walker options
-  var walker  = walk.walk('/root/letsencrypt/etc/', { followLinks: false });
-
-  walker.on('file', function(root, stat, next) {
-      // Add this file to the list of files
-      files.push(root + '/' + stat.name);
-      next();
-  });
-
-  walker.on('end', function() {
-      console.log(files);
-  });
-}
-
-var mosca = require('mosca')
-
-function activateMosca() {
-  //var SECURE_KEY = __dirname + '/../../test/secure/tls-key.pem';
-  //var SECURE_CERT = __dirname + '/../../test/secure/tls-cert.pem';
-  var SECURE_KEY = lex.privKeyPath.replace(":hostname", DOMAIN);
-  var SECURE_CERT = lex.certPath.replace(":hostname", DOMAIN);
-
-  var settings = {
-    port: 8443,
-    logger: {
-      name: "secureExample",
-      level: 40,
-    },
-    secure : { 
-      keyPath: SECURE_KEY,
-      certPath: SECURE_CERT,
-    }
-  };
-  var server = new mosca.Server(settings);
-  server.on('ready', setup);
-
-  // fired when the mqtt server is ready
-  function setup() {
-    console.log('Mosca server is up and running');
-    console.log(SECURE_KEY);
-  }
-}
