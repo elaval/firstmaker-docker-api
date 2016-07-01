@@ -2,7 +2,7 @@
 
 /* Note: using staging server url, remove .testing() for production
 Using .testing() will overwrite the debug flag with true */ 
-var LEX = require('letsencrypt-express')//.testing();
+var LEX = require('letsencrypt-express');//.testing();
 
 // Change these two lines!
 var DOMAIN = 'api.firstmakers.com';
@@ -17,6 +17,7 @@ var lex = LEX.create({
       , email: EMAIL
       , agreeTos: true
       });
+      console.log(lex.fullchainPath, lex.certPath, lex.privKeyPath);
     }
   }
 });
@@ -31,6 +32,8 @@ var bodyParser  = require('body-parser');
 var morgan      = require('morgan');
 var mongoose    = require('mongoose');
 var bCrypt = require('bcrypt-nodejs');
+var mosca = require('mosca');
+
 
 var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
 var config = require('./config'); // get our config file
@@ -184,6 +187,8 @@ apiRoutes.post('/authenticate', function(req, res) {
 // route middleware to verify a token
 apiRoutes.use(function(req, res, next) {
 
+  console.log(lex.fullchainPath, lex.certPath, lex.privKeyPath);
+
   // check header or url parameters or post parameters for token
   var token = req.body.token || req.query.token || req.headers['x-access-token'];
 
@@ -328,3 +333,14 @@ lex.listen([80], [443, 5001], function () {
   console.log("Listening at " + protocol + '://localhost:' + this.address().port);
 });
 //console.log('Magic happens at http://localhost:')
+
+
+
+var http     = require('http')
+  , httpServ = http.createServer()
+  , mosca    = require('mosca')
+  , mqttServ = new mosca.Server({});
+
+mqttServ.attachHttpServer(httpServ);
+
+httpServ.listen(3000);

@@ -14,6 +14,8 @@
     "jsonwebtoken": "^7.0.1",
     "letsencrypt-express": "^1.1.5",
     "mongoose": "^4.5.2",
-    "morgan": "^1.7.0"
+    "morgan": "^1.7.0",
+    "mosca": "^2.0.1",
+    "spdy": "^3.3.3"
   }
 }
