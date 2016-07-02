@@ -46,9 +46,12 @@ var bearerToken = require("express-bearer-token");
 
 var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
 var config = require('./config'); // get our config file
+
+// Mongoose models
 var User   = require('./app/models/user'); // get our mongoose model
 var Device   = require('./app/models/device'); // get our mongoose model
 var Code   = require('./app/models/code'); // get our mongoose model
+var Pin   = require('./app/models/pin'); // get our mongoose model
 
 // =======================
 // configuration =========
@@ -322,6 +325,9 @@ apiRoutes.post('/devices', function(req, res) {
             console.log('Device creation succesful');   
             res.json({ success: true, message: 'Device creation succesful' });
          });
+
+
+         
     }
   });
   
@@ -473,6 +479,79 @@ apiRoutes.delete('/code', function(req, res) {
 });   
 
 
+/**
+ * DATA - Experimental data loging for existing devices
+ */
+// POST devices - create a new device
+apiRoutes.post('/data/:user/:device/:devicepin', function(req, res) {
+  var user = req.params.user;
+  var device = req.params.device;
+  var pin = req.params.devicepin;
+  var payload = req.body.payload;
+
+  // check if the user corresponds to the user defined by the token
+  if (user == req.user.username) {
+
+    // Check if the device already exists
+  	Device.findOne({"username":user, "deviceName":device}, function(err,existingDevice) {
+      if (err) {
+        res.json({ success: false, message: 'Error :'+err});
+      } else if (existingDevice) {
+        var dataToSet={};
+        dataToSet['pins.'+pin]= payload;
+
+        Device.update(
+          {"username":user, "deviceName":device}, 
+          { 
+            upated : new Date(),
+            $set : dataToSet
+          }, function(err) {
+            if (err) {
+              res.json({ success: false, message: 'Error :'+err});
+            } else {
+              res.json({ success: true, message: 'Device update successful' });
+            }
+          });
+
+/*
+        // Device already exists
+        existingDevice.upated = new Date();
+        existingDevice.pins["pin_"+pin]=payload;
+
+        existingDevice.save(function(err) {
+          if (err) {
+            res.json({ success: false, message: 'Error :'+err});
+          } else {
+            res.json({ success: true, message: 'Device update successful' });
+          }
+        });
+        */
+      } else {
+        // Device doesn´t exist, we need to create it
+        var newDevice = Device();
+
+        newDevice.username = user;
+        newDevice.deviceName = device;
+        newDevice.updated = new Date();
+        newDevice.pins = {};
+        newDevice.pins[pin]= payload;
+
+        newDevice.save(function(err) {
+          if (err) {
+            res.json({ success: false, message: 'Error :'+err});
+          } else {
+            res.json({ success: true, message: 'Device update successful' });
+          }
+        });
+
+      }
+      
+    })
+  }
+
+  
+});   
+
 // apply the routes to our application with the prefix /api
 app.use('/api', apiRoutes);
 
@@ -489,7 +568,7 @@ app.get('/', function(req, res) {
 // =======================
 
 // Check if we are forcing a non secure https/ssl mode 
-if (process.env.NO_HTTPS) {
+if (!process.env.USE_HTTPS) {
 
   var port = process.env.PORT || 8080; // used to create, sign, and verify tokens
   app.listen(port);
