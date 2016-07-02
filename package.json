@@ -11,6 +11,7 @@
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
+    "express-bearer-token": "^2.1.0",
     "jsonwebtoken": "^7.0.1",
     "letsencrypt-express": "^1.1.5",
     "mongoose": "^4.5.2",

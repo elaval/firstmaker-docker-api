@@ -39,13 +39,17 @@ var mosca = require('mosca');
 var spdy = require('spdy'),
     fs = require('fs');
 
+var bearerToken = require("express-bearer-token");
+
+
 
 
 var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
 var config = require('./config'); // get our config file
 var User   = require('./app/models/user'); // get our mongoose model
 var Device   = require('./app/models/device'); // get our mongoose model
-    
+var Code   = require('./app/models/code'); // get our mongoose model
+
 // =======================
 // configuration =========
 // =======================
@@ -53,13 +57,20 @@ var Device   = require('./app/models/device'); // get our mongoose model
 var jwtSecret = process.env.JWT_SECRET || config.secret;
 var mongoDb = process.env.MONGO_DATABASE || config.database;
 
-var port = process.env.PORT || 8080; // used to create, sign, and verify tokens
 mongoose.connect(mongoDb); // connect to database
 app.set('superSecret', jwtSecret); // secret variable
 
 // use body parser so we can get info from POST and/or URL parameters
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+// Extracts the token from Header, query or body
+app.use(bearerToken({
+  bodyKey: 'access_token',
+  queryKey: 'access_token',
+  headerKey: 'Bearer',
+  reqKey: 'token'
+}));
 
 // use morgan to log requests to the console
 app.use(morgan('dev'));
@@ -194,7 +205,8 @@ apiRoutes.post('/authenticate', function(req, res) {
 apiRoutes.use(function(req, res, next) {
 
   // check header or url parameters or post parameters for token
-  var token = req.body.token || req.query.token || req.headers['x-access-token'];
+  //var token = req.body.token || req.query.token || req.headers['x-access-token'];
+  var token = req.token ;
 
   // decode token
   if (token) {
@@ -235,7 +247,7 @@ apiRoutes.get('/users', function(req, res) {
 });   
 
 
-// route to return all users (GET http://localhost:8080/api/users)
+// GET devices/:deviceName - get info on a specific device
 apiRoutes.get('/devices/:deviceName', function(req, res) {
 
   var email = req.user.email;
@@ -260,7 +272,7 @@ apiRoutes.get('/devices/:deviceName', function(req, res) {
   
 }); 
 
-// route to return all users (GET http://localhost:8080/api/users)
+// GET devices - Get all devices
 apiRoutes.get('/devices', function(req, res) {
   var email = req.user.email;
   
@@ -270,7 +282,7 @@ apiRoutes.get('/devices', function(req, res) {
   
 }); 
 
-// route to return all users (GET http://localhost:8080/api/users)
+// POST devices - create a new device
 apiRoutes.post('/devices', function(req, res) {
   var email = req.user.email;
   var username = req.user.username;
@@ -315,6 +327,152 @@ apiRoutes.post('/devices', function(req, res) {
   
 });   
 
+/**
+ * Coce - manage code sketches associated to a specific user
+ */
+
+// GET code/:title - get info on a specific code sketches
+apiRoutes.get('/code/:title', function(req, res) {
+
+  var email = req.user.email;
+  var title = req.params.title;
+  
+  Code.findOne({'email':email, 'codetitle':title}, function(err, code) {
+    if (err) {
+      res.status(403).send({ 
+          success: false, 
+          message: 'Error getting the code.' 
+      });      
+    } else if (!code) {
+      res.status(404).send({ 
+          success: false, 
+          message: 'Code not found.' 
+      }); 
+    } else {
+      res.json(code);
+    }
+  });
+}); 
+
+// GET devices - Get all devices
+apiRoutes.get('/code', function(req, res) {
+  var email = req.user.email;
+  
+  Code.find({'email':email}, function(err, code) {
+    res.json(code);
+  });
+  
+}); 
+
+// POST devices - create a new device
+apiRoutes.post('/code', function(req, res) {
+  var email = req.user.email;
+  var codexml = req.body.codexml;
+  var title = req.body.title || req.query.title;
+
+  if (!title) {
+    res.json({ success: false, message: 'Must provide a title'});
+  } else {
+    // Check if the code title already exist
+    Code.findOne({
+      'email': email,
+      'codetitle': title
+    }, function(err, code) {
+
+      if (err){
+          res.json({ success: false, message: 'Error creating code sketch: '+err });
+      }
+      // already exists
+      if (code) {
+          res.json({ success: false, message: 'Code title already exists for that email: '+email +' - '+ title});
+      } else {
+          // if there is no code with that email
+          // create the code
+          var newCode = new Code();
+
+          // set the user's local credentials
+          newCode.codetitle = title;
+          newCode.codexml = codexml;
+          newCode.email = email;
+
+          // save the user
+          newCode.save(function(err) {
+              if (err){
+                  console.log('Error in Saving code: '+err);  
+                  res.json({ success: false, message: 'Error in Saving device: '+err });
+              }
+              res.json({ success: true, message: 'Code succefully saved' });
+          });
+      }
+    });
+  }
+  
+});   
+
+// PUT code - update code
+apiRoutes.put('/code', function(req, res) {
+  var email = req.user.email;
+  var codexml = req.body.codexml;
+  var title = req.body.title || req.query.title;
+
+  if (!title) {
+    res.json({ success: false, message: 'Must provide a title'});
+  } else {
+    // Check if the code title already exist
+    Code.findOne({
+      'email': email,
+      'codetitle': title
+    }, function(err, code) {
+
+      if (err){
+          res.json({ success: false, message: 'Error creating code sketch: '+err });
+      }
+      // already exists
+      if (code) {
+          code.codexml = codexml;
+          code.save(function(err) {
+              if (err){
+                  res.json({ success: false, message: 'Error updating the code: '+err });
+              }
+              res.json({ success: true, message: 'Code succefully updated' });
+          });
+      } else {
+          res.json({ success: false, message: 'Code title does not exists for that email: '+email +' - '+ title});
+      }
+    });
+  }
+  
+}); 
+
+// PUT code - update code
+apiRoutes.delete('/code', function(req, res) {
+  var email = req.user.email;
+  var title = req.body.title || req.query.title;
+
+  if (!title) {
+    res.json({ success: false, message: 'Must provide a title'});
+  } else {
+    // Check if the code title already exist
+    Code.findOneAndRemove({
+      'email': email,
+      'codetitle': title
+    }, function(err, code) {
+
+      if (err){
+          res.json({ success: false, message: 'Error deleting code sketch: '+err });
+      }  
+      // already exists
+      if (code) {
+          res.json({ success: true, message: 'Code succefully deleted' });
+      } else {
+          res.json({ success: false, message: 'Code title does not exists for that email: '+email +' - '+ title});
+      }
+    });
+  }
+  
+});   
+
+
 // apply the routes to our application with the prefix /api
 app.use('/api', apiRoutes);
 
@@ -329,26 +487,38 @@ app.get('/', function(req, res) {
 // =======================
 // start the server ======
 // =======================
-//app.listen(port);
 
-var options = {
-	key: fs.readFileSync('/root/certs/api.key.pem'),
-    cert: fs.readFileSync('/root/certs/api.cert.crt'),
-    ca: [fs.readFileSync('/root/certs/ca_gd1.crt'), fs.readFileSync('/root/certs/ca_gd2.crt'), fs.readFileSync('/root/certs/ca_gd3.crt')]
-};
- 
-var server = spdy.createServer(options, app);
- 
-server.listen(443);
-console.log("listening 443");
+// Check if we are forcing a non secure https/ssl mode 
+if (process.env.NO_HTTPS) {
 
-/* 
-When letsencrypt is used, we will go for the following server config
-lex.onRequest = app;
+  var port = process.env.PORT || 8080; // used to create, sign, and verify tokens
+  app.listen(port);
+  console.log("listening on port "+port);
 
-lex.listen([80], [443, 5001], function () {
-  var protocol = ('requestCert' in this) ? 'https': 'http';
-  console.log("Listening at " + protocol + '://localhost:' + this.address().port);
-});
-*/
+} else {
+
+  var options = {
+    key: fs.readFileSync('/root/certs/api.key.pem'),
+      cert: fs.readFileSync('/root/certs/api.cert.crt'),
+      ca: [fs.readFileSync('/root/certs/ca_gd1.crt'), fs.readFileSync('/root/certs/ca_gd2.crt'), fs.readFileSync('/root/certs/ca_gd3.crt')]
+  };
+  
+  var server = spdy.createServer(options, app);
+  
+  server.listen(443);
+  console.log("listening on port 443");
+
+  /* 
+  When letsencrypt is used, we will go for the following server config
+  lex.onRequest = app;
+
+  lex.listen([80], [443, 5001], function () {
+    var protocol = ('requestCert' in this) ? 'https': 'http';
+    console.log("Listening at " + protocol + '://localhost:' + this.address().port);
+  });
+  */
+}
+
+
+
 
