@@ -569,13 +569,15 @@ app.get('/', function(req, res) {
 
 // Check if we are forcing a non secure https/ssl mode 
 if (!process.env.USE_HTTPS) {
-
+  // NOn HTTPS MODE (we use a standard - non secure port)   NOT RECOMMENDED
+  // Only use this if you don´t have the apporpiate ssl certificates
   var port = process.env.PORT || 8080; // used to create, sign, and verify tokens
   app.listen(port);
   console.log("listening on port "+port);
 
 } else {
-
+  // HTTP Secure mode
+  // We read certificates from /root/certs
   var options = {
     key: fs.readFileSync('/root/certs/api.key.pem'),
       cert: fs.readFileSync('/root/certs/api.cert.crt'),
