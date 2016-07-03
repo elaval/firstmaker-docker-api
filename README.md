@@ -21,7 +21,11 @@ docker run -d -p 443:443 -e JWT_SECRET="Secret phrase to interpret JWT token" \
 -v /host/path/data/db:/data/db username/image
 ```
 We expect the following certs: 
-- api.cert.crt  api.key.pem  ca_bundle.crt  ca_gd1.crt  ca_gd2.crt  ca_gd3.crt
+- api.cert.crt  
+- api.key.pem  
+- ca_gd1.crt  
+- ca_gd2.crt  
+- ca_gd3.crt
 
 Most API calls require a jwt token which can be obtained by authenticated users
 
