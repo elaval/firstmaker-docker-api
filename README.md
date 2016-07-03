@@ -6,7 +6,7 @@ Docker source to build a REST APi server used to manage Firstmakers Backend serv
 $ docker build -t username/imagename .
 
 ## Running the docker image
-### Using insecure http port 
+### Using insecure http port (not recommended - only for development in localhost)
 ```
 docker run -d -p 8080:8080 -e JWT_SECRET="Secret phrase to interpret JWT token" \
 -e MONGO_DATABASE="mongodb://mongodb.url:27017/dbname"  \
