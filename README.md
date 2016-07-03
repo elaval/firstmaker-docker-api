@@ -20,7 +20,7 @@ docker run -d -p 443:443 -e JWT_SECRET="Secret phrase to interpret JWT token" \
 -v /host/path/certs:/root/certs \
 -v /host/path/data/db:/data/db username/image
 ```
-We expect the following certs: 
+We expect the following certs at /host/path/certs: 
 - api.cert.crt  
 - api.key.pem  
 - ca_gd1.crt  
