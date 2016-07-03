@@ -50,8 +50,12 @@ var config = require('./config'); // get our config file
 // Mongoose models
 var User   = require('./app/models/user'); // get our mongoose model
 var Device   = require('./app/models/device'); // get our mongoose model
-var Code   = require('./app/models/code'); // get our mongoose model
+var Sketch   = require('./app/models/sketch'); // get our mongoose model
 var Pin   = require('./app/models/pin'); // get our mongoose model
+
+// requestHandlers
+var sketchHandlers = require("./app/requestHandlers/sketch");
+var deviceHandlers = require("./app/requestHandlers/device");
 
 // =======================
 // configuration =========
@@ -239,7 +243,7 @@ apiRoutes.use(function(req, res, next) {
 
 // route to show a random message (GET http://localhost:8080/api/)
 apiRoutes.get('/', function(req, res) {
-  res.json({ message: req.client.username + ' welcome to the coolest API on earth!' });
+  res.json({ message: req.user.username + ', welcome to the coolest API on earth!' });
 });
 
 // route to return all users (GET http://localhost:8080/api/users)
@@ -250,318 +254,49 @@ apiRoutes.get('/users', function(req, res) {
 });   
 
 
-// GET devices/:deviceName - get info on a specific device
-apiRoutes.get('/devices/:deviceName', function(req, res) {
-
-  var email = req.user.email;
-  var deviceName = req.params.deviceName;
-  
-  Device.findOne({'email':email, 'deviceName':deviceName}, function(err, device) {
-    if (err) {
-      res.status(403).send({ 
-          success: false, 
-          message: 'Error getting device.' 
-      });      
-    } else if (!device) {
-      res.status(404).send({ 
-          success: false, 
-          message: 'Device not found.' 
-      }); 
-    } else {
-      res.json(device);
-    }
-    
-  });
-  
-}); 
-
 // GET devices - Get all devices
-apiRoutes.get('/devices', function(req, res) {
-  var email = req.user.email;
-  
-  Device.find({'email':email}, function(err, devices) {
+apiRoutes.get('/activedevices', function(req, res) {  
+  var yesterday =  new Date( (new Date)*1 - 1000*3600*2 );
+
+  Device.find({"updated" : {$gte: yesterday }}, function(err, devices) {
     res.json(devices);
   });
-  
 }); 
-
-// POST devices - create a new device
-apiRoutes.post('/devices', function(req, res) {
-  var email = req.user.email;
-  var username = req.user.username;
-  var deviceName = req.body.deviceName || req.query.deviceName;
-
-  // find the user
-  Device.findOne({
-    'email': email,
-    'device': deviceName
-  }, function(err, device) {
-
-    // In case of any error, return using the done method
-    if (err){
-        console.log('Error creating device: '+err);
-        res.json({ success: false, message: 'Error creating device: '+err });
-    }
-    // already exists
-    if (device) {
-        console.log('Device already exists for that email: '+email, deviceName);
-        res.json({ success: false, message: 'Device already exists for that email: '+email +' - '+ deviceName});
-    } else {
-        // if there is no user with that email
-        // create the user
-        var newDevice = new Device();
-
-        // set the user's local credentials
-        newDevice.username = username;
-        newDevice.email = email;
-        newDevice.deviceName = deviceName;
-
-        // save the user
-        newDevice.save(function(err) {
-            if (err){
-                console.log('Error in Saving device: '+err);  
-                res.json({ success: false, message: 'Error in Saving device: '+err });
-            }
-            console.log('Device creation succesful');   
-            res.json({ success: true, message: 'Device creation succesful' });
-         });
-
-
-         
-    }
-  });
-  
-});   
 
 /**
- * Coce - manage code sketches associated to a specific user
+ * Pins - manage pin values associated to a device / username
  */
-
-// GET code/:title - get info on a specific code sketches
-apiRoutes.get('/code/:title', function(req, res) {
-
-  var email = req.user.email;
-  var title = req.params.title;
-  
-  Code.findOne({'email':email, 'codetitle':title}, function(err, code) {
-    if (err) {
-      res.status(403).send({ 
-          success: false, 
-          message: 'Error getting the code.' 
-      });      
-    } else if (!code) {
-      res.status(404).send({ 
-          success: false, 
-          message: 'Code not found.' 
-      }); 
-    } else {
-      res.json(code);
-    }
-  });
-}); 
-
-// GET devices - Get all devices
-apiRoutes.get('/code', function(req, res) {
-  var email = req.user.email;
-  
-  Code.find({'email':email}, function(err, code) {
-    res.json(code);
-  });
-  
-}); 
-
-// POST devices - create a new device
-apiRoutes.post('/code', function(req, res) {
-  var email = req.user.email;
-  var codexml = req.body.codexml;
-  var title = req.body.title || req.query.title;
-
-  if (!title) {
-    res.json({ success: false, message: 'Must provide a title'});
-  } else {
-    // Check if the code title already exist
-    Code.findOne({
-      'email': email,
-      'codetitle': title
-    }, function(err, code) {
-
-      if (err){
-          res.json({ success: false, message: 'Error creating code sketch: '+err });
-      }
-      // already exists
-      if (code) {
-          res.json({ success: false, message: 'Code title already exists for that email: '+email +' - '+ title});
-      } else {
-          // if there is no code with that email
-          // create the code
-          var newCode = new Code();
-
-          // set the user's local credentials
-          newCode.codetitle = title;
-          newCode.codexml = codexml;
-          newCode.email = email;
-
-          // save the user
-          newCode.save(function(err) {
-              if (err){
-                  console.log('Error in Saving code: '+err);  
-                  res.json({ success: false, message: 'Error in Saving device: '+err });
-              }
-              res.json({ success: true, message: 'Code succefully saved' });
-          });
-      }
-    });
-  }
-  
-});   
-
-// PUT code - update code
-apiRoutes.put('/code', function(req, res) {
-  var email = req.user.email;
-  var codexml = req.body.codexml;
-  var title = req.body.title || req.query.title;
-
-  if (!title) {
-    res.json({ success: false, message: 'Must provide a title'});
-  } else {
-    // Check if the code title already exist
-    Code.findOne({
-      'email': email,
-      'codetitle': title
-    }, function(err, code) {
-
-      if (err){
-          res.json({ success: false, message: 'Error creating code sketch: '+err });
-      }
-      // already exists
-      if (code) {
-          code.codexml = codexml;
-          code.save(function(err) {
-              if (err){
-                  res.json({ success: false, message: 'Error updating the code: '+err });
-              }
-              res.json({ success: true, message: 'Code succefully updated' });
-          });
-      } else {
-          res.json({ success: false, message: 'Code title does not exists for that email: '+email +' - '+ title});
-      }
-    });
-  }
-  
-}); 
-
-// PUT code - update code
-apiRoutes.delete('/code', function(req, res) {
-  var email = req.user.email;
-  var title = req.body.title || req.query.title;
-
-  if (!title) {
-    res.json({ success: false, message: 'Must provide a title'});
-  } else {
-    // Check if the code title already exist
-    Code.findOneAndRemove({
-      'email': email,
-      'codetitle': title
-    }, function(err, code) {
-
-      if (err){
-          res.json({ success: false, message: 'Error deleting code sketch: '+err });
-      }  
-      // already exists
-      if (code) {
-          res.json({ success: true, message: 'Code succefully deleted' });
-      } else {
-          res.json({ success: false, message: 'Code title does not exists for that email: '+email +' - '+ title});
-      }
-    });
-  }
-  
-});   
-
+apiRoutes.get('/devices/:deviceName/pins', deviceHandlers.pins_read);
+apiRoutes.put('/devices/:deviceName/pins/:pin', deviceHandlers.pins_update);
+apiRoutes.delete('/devices/:deviceName/pins/:pin', deviceHandlers.pins_delete);
 
 /**
- * DATA - Experimental data loging for existing devices
+ * Devices - manage device objects associated to a specific user
  */
-// POST devices - create a new device
-apiRoutes.post('/data/:user/:device/:devicepin', function(req, res) {
-  var user = req.params.user;
-  var device = req.params.device;
-  var pin = req.params.devicepin;
-  var payload = req.body.payload;
+apiRoutes.get('/devices', deviceHandlers.read);
+apiRoutes.get('/devices/:deviceName', deviceHandlers.readOne);
+apiRoutes.post('/devices', deviceHandlers.create);
+apiRoutes.put('/devices/:deviceName', deviceHandlers.update);
+apiRoutes.delete('/devices/:deviceName', deviceHandlers.delete);
 
-  // check if the user corresponds to the user defined by the token
-  if (user == req.user.username) {
+/**
+ * Sketches - manage  sketches associated to a specific user
+ */
+apiRoutes.get('/sketches', sketchHandlers.read);
+apiRoutes.get('/sketches/:title', sketchHandlers.readOne);
+apiRoutes.post('/sketches', sketchHandlers.create);
+apiRoutes.put('/sketches:/title', sketchHandlers.update);
+apiRoutes.delete('/sketches:/title', sketchHandlers.delete);
 
-    // Check if the device already exists
-  	Device.findOne({"username":user, "deviceName":device}, function(err,existingDevice) {
-      if (err) {
-        res.json({ success: false, message: 'Error :'+err});
-      } else if (existingDevice) {
-        var dataToSet={};
-        dataToSet['pins.'+pin]= payload;
-
-        Device.update(
-          {"username":user, "deviceName":device}, 
-          { 
-            upated : new Date(),
-            $set : dataToSet
-          }, function(err) {
-            if (err) {
-              res.json({ success: false, message: 'Error :'+err});
-            } else {
-              res.json({ success: true, message: 'Device update successful' });
-            }
-          });
-
-/*
-        // Device already exists
-        existingDevice.upated = new Date();
-        existingDevice.pins["pin_"+pin]=payload;
-
-        existingDevice.save(function(err) {
-          if (err) {
-            res.json({ success: false, message: 'Error :'+err});
-          } else {
-            res.json({ success: true, message: 'Device update successful' });
-          }
-        });
-        */
-      } else {
-        // Device doesn´t exist, we need to create it
-        var newDevice = Device();
-
-        newDevice.username = user;
-        newDevice.deviceName = device;
-        newDevice.updated = new Date();
-        newDevice.pins = {};
-        newDevice.pins[pin]= payload;
-
-        newDevice.save(function(err) {
-          if (err) {
-            res.json({ success: false, message: 'Error :'+err});
-          } else {
-            res.json({ success: true, message: 'Device update successful' });
-          }
-        });
-
-      }
-      
-    })
-  }
-
-  
-});   
 
 // apply the routes to our application with the prefix /api
 app.use('/api', apiRoutes);
 
 // basic route
 app.get('/', function(req, res) {
-    res.send('Hello! The API is at http://localhost:' + port + '/api');
+    res.send('Hello! The API is at '+req.protocol+'://'+req.hostname+':' + port + '/api');
 });
 
-// API ROUTES -------------------
-// we'll get to these in a second
 
 // =======================
 // start the server ======
