@@ -7,5 +7,6 @@ module.exports = mongoose.model('User', new Schema({
     username: String, 
     email: String, 
     password: String, 
-    admin: Boolean 
+    admin: Boolean,
+    refreshToken:String
 }));

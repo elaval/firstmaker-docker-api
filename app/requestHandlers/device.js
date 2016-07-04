@@ -238,6 +238,15 @@ function pins_delete(req, res) {
   });
 }; 
 
+// GET active devices - Get all devices with updated data during last day (or the specified number of minutes)
+function devices_active_read(req, res) {
+  var window_minutes = req.query.minutes ? req.query.minutes : 60*24;  // Default window size is 24 hours
+  var yesterday =  new Date( (new Date)*1 - 1000*60*window_minutes );  // Yesterday = today - 24 hours in milliseconds
+
+  Device.find({"updated" : {$gte: yesterday }}, function(err, devices) {
+    res.json(devices);
+  });
+}; 
 
 // set up a mongoose model and pass it using module.exports
 module.exports = {
@@ -248,6 +257,6 @@ module.exports = {
     "delete": remove,  // delete is not allowed for function name in strict mode
     "pins_read" :pins_read,
     "pins_update" :pins_update,
-    "pins_delete": pins_delete
-    
+    "pins_delete": pins_delete,
+    "devices_active_read" : devices_active_read
 };
