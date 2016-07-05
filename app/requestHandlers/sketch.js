@@ -19,13 +19,13 @@ function read(req, res) {
   
 }; 
 
-// GET /sketches/:title - Get one skecth
+// GET /sketches/:id - Get one skecth
 function readOne(req, res) {
 
   var username = req.user.username;
-  var title = req.params.title;
+  var id = req.params.id;
   
-  Sketch.findOne({'username':username, 'title':title}, function(err, sketch) {
+  Sketch.findOne({'username':username, '_id':id}, function(err, sketch) {
     if (err) {
       res.status(403).send({ 
           success: false, 
@@ -85,7 +85,7 @@ function create(req, res) {
                   console.log('Error in Saving code: '+err);  
                   res.json({ success: false, message: 'Error in Saving device: '+err });
               }
-              res.json({ success: true, message: 'Code succefully saved' });
+              res.json({ success: true, message: 'Code succefully saved', sketch: newSketch});
           });
       }
     });
@@ -97,8 +97,9 @@ function create(req, res) {
 function update(req, res) {
   // Identify the sketch by the username (from the token) and the title
   var username = req.user.username;
-  var title = req.params.title;
+  var id = req.params.id;
 
+  var title = req.body.title;
   var blocks = req.body.blocks;
   var description = req.body.description;
   var tags = req.body.tags;
@@ -107,11 +108,12 @@ function update(req, res) {
   if (blocks) dataToSet['blocks']= blocks;
   if (description) dataToSet['description']= description;
   if (tags) dataToSet['tags']= tags;
+  if (title) dataToSet['title']= title;
 
   // Check if the code title already exist
   Sketch.update({
     'username': username,
-    'title': title
+    '_id': id
   },
   {
     $set : dataToSet
@@ -130,7 +132,7 @@ function update(req, res) {
 function remove(req, res) {
   // Identify the sketch by the username (from the token) and the title
   var username = req.user.username;
-  var title = req.params.title;
+  var id = req.params.id;
 
   if (!title) {
     res.json({ success: false, message: 'Must provide a title'});
@@ -138,7 +140,7 @@ function remove(req, res) {
     // Check if the code title already exist
     Sketch.remove({
       'username': username,
-      'title': title
+      '_id': id
     }, function(err) {
 
       if (err){

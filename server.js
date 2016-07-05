@@ -132,10 +132,10 @@ apiRoutes.delete('/devices/:deviceName', deviceHandlers.delete);
  * Sketches - manage  sketches associated to a specific user
  */
 apiRoutes.get('/sketches', sketchHandlers.read);
-apiRoutes.get('/sketches/:title', sketchHandlers.readOne);
+apiRoutes.get('/sketches/:id', sketchHandlers.readOne);
 apiRoutes.post('/sketches', sketchHandlers.create);
-apiRoutes.put('/sketches:/title', sketchHandlers.update);
-apiRoutes.delete('/sketches:/title', sketchHandlers.delete);
+apiRoutes.put('/sketches/:id', sketchHandlers.update);
+apiRoutes.delete('/sketches/:id', sketchHandlers.delete);
 
 
 // apply the routes to our application authentication functions with the prefix /api/auth
