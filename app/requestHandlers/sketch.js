@@ -66,7 +66,7 @@ function create(req, res) {
       }
       // already exists
       if (sketch) {
-          res.json({ success: false, message: 'Code title already exists for that username: '+username +' - '+ title});
+          res.json({ success: false, message: 'Code title already exists for that username: '+username +' - '+ title, sketch:sketch});
       } else {
           // if there is no code with that email
           // create the code
@@ -134,23 +134,19 @@ function remove(req, res) {
   var username = req.user.username;
   var id = req.params.id;
 
-  if (!title) {
-    res.json({ success: false, message: 'Must provide a title'});
-  } else {
-    // Check if the code title already exist
-    Sketch.remove({
-      'username': username,
-      '_id': id
-    }, function(err) {
+  // Check if the code title already exist
+  Sketch.remove({
+    'username': username,
+    '_id': id
+  }, function(err) {
 
-      if (err){
-          res.json({ success: false, message: 'Error deleting code sketch: '+err });
-      }  else {
-         res.json({ success: true, message: 'Code succefully deleted' });
-      }
+    if (err){
+        res.json({ success: false, message: 'Error deleting sketch: '+err });
+    }  else {
+        res.json({ success: true, message: 'Sketch succefully deleted' });
+    }
 
-    });
-  }
+  });
   
 };   
 
