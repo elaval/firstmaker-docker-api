@@ -8,6 +8,8 @@ var crypto = require('crypto');
 var _ = require("underscore");
 var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
 var config = require('../../config'); // get our config file
+var nodemailer = require('nodemailer');
+var sesTransport = require('nodemailer-ses-transport');
 
 var jwtSecret = process.env.JWT_SECRET || config.secret;
 
@@ -237,6 +239,104 @@ function token(req, res) {
   }
 };
 
+// sends an email with a "password reset key" to the specified user account
+// POST /forgotpassword - initiates password reset process
+// Requires a valid email
+function forgotpassword(req, res) {
+  var email = req.body.email;
+
+  if (email) {
+
+    var accessKey = process.env.AWS_ACCESS_KEY;
+    var secretKey = process.env.AWS_SECRET_KEY;
+
+    // create a "password reset" jwt token
+    var payload = {
+      email : email,
+      resetpassword: true
+    }
+
+    var token = jwt.sign(payload, jwtSecret, {
+      expiresIn: "1 hour" // expires in 1 hour
+    });
+
+    var transport = nodemailer.createTransport(sesTransport({
+        accessKeyId: accessKey,
+        secretAccessKey: secretKey,
+        rateLimit: 5 // do not send more than 5 messages in a second
+    }));
+
+    var mailOptions = {
+        from: 'no_reply@firstmakers.com', // sender address
+        to: email, // list of receivers
+        subject: 'Firstmakers password reset', // Subject line
+        text: 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
+          'Please copy and paste the following key into your password reset dialog: \n\n' + token + '\n\n' +
+          'If you did not request this, please ignore this email and your password will remain unchanged.\n'+
+          'Please follow <a href="https://firstmakers.s3.amazonaws.com/passwordreset/index.html#/page1?token='+ token +'">this link</a> which will be valid for 1 hour.\n',
+    };
+
+    // send mail with defined transport object
+    transport.sendMail(mailOptions, function(error, info){
+        if(error){
+            res.send(error);
+            return console.log(error);
+        }
+        res.json({ success: true, message: 'Message sent to '+email});
+    });
+
+  } else {
+      res.json({ success: false, message: 'No usermail provided'});
+  }
+
+};
+
+// POST /resetpassword - resets a password given a valid password reset token
+// Requires a valid email, password & reset_token
+function resetpassword(req, res) {
+  var password = req.body.password;
+  var reset_token = req.body.reset_token;
+
+  if (password && reset_token) {
+
+    // verifies secret and checks exp
+    jwt.verify(reset_token, jwtSecret, function(err, decoded) {      
+      if (err) {
+        return res.json({ success: false, message: 'Failed to authenticate token.' });    
+      } else {
+        if (decoded && decoded.resetpassword) {
+          var email = decoded.email;
+          var encryptedPassword = createHash(password);
+
+          User.update({
+              "email": email
+            },
+            {
+              $set : {"password":encryptedPassword}
+            },
+            function(err) {
+              if (err) {
+                res.json({ success: false, message: 'Could not change the password' });
+              } else {
+                // return the information including token as JSON
+                res.json({
+                  success: true,
+                  message: "Password changed"
+                });
+              }
+            })
+        } else {
+          res.json({ success: flase, message: 'Not a reset password token'});
+        }
+        
+      }
+    });
+  } else {
+      res.json({ success: false, message: 'Must provide password & reset token'});
+  }
+
+};
+
 // token_validator
 // Middelware function that checks if a given token is valid
 
@@ -273,11 +373,15 @@ function token_validator(req, res, next) {
   }
 };
 
+
+
 // set up a mongoose model and pass it using module.exports
 module.exports = {
     "signup": signup, 
     "signin": signin,
     "token": token,
+    "forgotpassword": forgotpassword,
+    "resetpassword" : resetpassword,
     "token_revoke": token_revoke,   
     "token_validator":  token_validator
 };

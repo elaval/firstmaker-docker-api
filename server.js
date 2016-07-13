@@ -39,7 +39,6 @@ var fs = require('fs');
 var bearerToken = require("express-bearer-token");
 var cors = require('cors')
 
-
 var config = require('./config'); // get our config file
 
 // Mongoose models
@@ -95,6 +94,8 @@ authRoutes.post('/signup', authHandlers.signup);
 authRoutes.post('/signin', authHandlers.signin);
 authRoutes.post('/token/revoke', authHandlers.token_revoke);
 authRoutes.post('/token', authHandlers.token);
+authRoutes.post('/forgotpassword', authHandlers.forgotpassword);
+authRoutes.post('/resetpassword', authHandlers.resetpassword);
 
 // API route middleware to verify a valid access_token for /api/* requests
 apiRoutes.use(authHandlers.token_validator);
@@ -143,6 +144,7 @@ app.use('/api/auth', authRoutes);
 
 // apply the routes to our application with the prefix /api
 app.use('/api', apiRoutes);
+
 
 
 // basic route

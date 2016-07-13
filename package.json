@@ -18,6 +18,8 @@
     "mongoose": "^4.5.2",
     "morgan": "^1.7.0",
     "mosca": "^2.0.1",
+    "nodemailer": "^2.5.0",
+    "nodemailer-ses-transport": "^1.4.0",
     "spdy": "^3.3.3",
     "underscore": "^1.8.3",
     "walk": "^2.3.9"
