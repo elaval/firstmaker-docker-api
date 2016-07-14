@@ -270,9 +270,9 @@ function forgotpassword(req, res) {
         from: 'no_reply@firstmakers.com', // sender address
         to: email, // list of receivers
         subject: 'Firstmakers password reset', // Subject line
-        html: 'You are receiving this because you (or someone else) have requested the reset of the password for your firstmakers account.<p><p>' +
+        html: 'You are receiving this email because you (or someone else) have requested the reset of the password for your firstmakers account.<p><p>' +
           'If you did not request this, please ignore this email and your password will remain unchanged.<p><p>'+
-          'To change your password, please follow <a href="https://firstmakers.s3.amazonaws.com/passwordreset/index.html#/resetpassword?token='+ token +'">this link</a> which will be valid for 1 hour.\n',
+          'To change your password, please follow <a href="https://utilities.firstmakers.com/resetpassword/#/resetpassword?token='+ token +'">this link</a> which will be valid for 1 hour.\n',
     };
 
     // send mail with defined transport object
