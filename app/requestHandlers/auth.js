@@ -26,8 +26,17 @@ function generateRefreshToken(username) {
     return refreshToken;
 }
 
-// POST /signup - registers a new user
-// Requires username, password & email as data params
+/**
+ * POST /signup - registers a new user
+ * Requires username, password & email as data params
+ * 
+ * ERROR_SIGNUP
+ * ERROR_SIGNUP_EMAIL_EXISTS
+ * ERROR_SIGNUP_USERNAME_EXISTS
+ * ERROR_SIGNUP_USER_VALIDATION_FAILED
+ * ERROR_SIGNUP_USER_SAVE_ERROR
+ * ERROR_SIGNUP_LACK_EMAIL_USERNAME_PASSWORD
+ */
 function signup(req, res) {
   var username = req.body.username,
     password = req.body.password,
@@ -42,12 +51,12 @@ function signup(req, res) {
       // In case of any error, return using the done method
       if (err){
           console.log('Error in SignUp: '+err);
-          res.json({ success: false, message: 'Error in SignUp: '+err });
+          res.json({ success: false, message: 'Error in SignUp: '+err , message_code:'ERROR_SIGNUP'});
       }
       // already exists
       else if (user) {
           console.log('User already exists with username: '+username);
-          res.json({ success: false, message: 'There is already a user with this email'});
+          res.json({ success: false, message: 'There is already a user with this email',  message_code:'ERROR_SIGNUP_EMAIL_EXISTS'});
       } else {
           // if there is no user with that email
           // Check that the username is not taken
@@ -55,9 +64,9 @@ function signup(req, res) {
             username: username
           }, function(err, user) {
             if (err) {
-              res.json({ success: false, message: 'Error in SignUp: '+err });
+              res.json({ success: false, message: 'Error in SignUp: '+err , message_code:'ERROR_SIGNUP_USER_VALIDATION_FAILED'});
             } else if (user) {
-              res.json({ success: false, message: 'Username "'+username+'" already exists'});
+              res.json({ success: false, message: 'Username "'+username+'" already exists', message_code:'ERROR_SIGNUP_USERNAME_EXISTS'});
             } else {
               // create the user
               var newUser = new User();
@@ -71,7 +80,7 @@ function signup(req, res) {
               newUser.save(function(err) {
                   if (err){
                       console.log('Error in Saving user: '+err);  
-                      res.json({ success: false, message: 'Error in Saving user: '+err });
+                      res.json({ success: false, message: 'Error in Saving user: '+err , message_code:'ERROR_SIGNUP_USER_SAVE_ERROR'});
                   }
                   console.log('User Registration succesful');   
                   res.json({ success: true, message: 'User Registration succesful' });
@@ -82,14 +91,14 @@ function signup(req, res) {
       }
     });
   } else {
-    res.json({ success: false, message: 'Must provide vaid email, username & password' });
+    res.json({ success: false, message: 'Must provide vaid email, username & password', message_code:'ERROR_SIGNUP_LACK_EMAIL_USERNAME_PASSWORD' });
   }
 };
 
 // POST /signin - authenticates an existing user, obtaining access & refresh tokens
 // Requires password & email as data params
 // Error codes in messages:
-// ERROR_SIGNIN_NO_USER
+// ERROR_SIGNIN_INVALID_EMAIL
 // ERROR_SIGNIN_INVALID_PASSWORD
 // ERROR_SIGNIN_SAVE_TOKEN
 // ERROR_SIGNIN_NO_EMAIL_PASSWORD
