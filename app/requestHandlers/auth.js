@@ -88,6 +88,12 @@ function signup(req, res) {
 
 // POST /signin - authenticates an existing user, obtaining access & refresh tokens
 // Requires password & email as data params
+// Error codes in messages:
+// ERROR_SIGNIN_NO_USER
+// ERROR_SIGNIN_INVALID_PASSWORD
+// ERROR_SIGNIN_SAVE_TOKEN
+// ERROR_SIGNIN_NO_EMAIL_PASSWORD
+//
 function signin(req, res) {
 
   if (req.body && req.body.email && req.body.password) {
@@ -100,13 +106,13 @@ function signin(req, res) {
       if (err) throw err;
 
       if (!user) {
-        res.json({ success: false, message: 'Authentication failed. User not found.' , message_code:'ERROR_INVALID_EMAIL'});
+        res.json({ success: false, message: 'Authentication failed. User not found.' , message_code:'ERROR_SIGNIN_INVALID_EMAIL'});
       } else if (user) {
 
         // check if password matches
         
         if (!bCrypt.compareSync(req.body.password,user.get('password'))) {
-          res.json({ success: false, message: 'Authentication failed. Wrong password.', message_code:'ERROR_INVALID_PASSWORD' });
+          res.json({ success: false, message: 'Authentication failed. Wrong password.', message_code:'ERROR_SIGNIN_INVALID_PASSWORD' });
         } else {
 
           var payload = {
@@ -133,7 +139,7 @@ function signin(req, res) {
               },
               function(err) {
                 if (err) {
-                  res.json({ success: false, message: 'Could not save refresh token' });
+                  res.json({ success: false, message: 'Could not save refresh token', message_code:'ERROR_SIGNIN_SAVE_TOKEN' });
                 } else {
                   // return the information including token as JSON
                   res.json({
@@ -165,7 +171,7 @@ function signin(req, res) {
     });
 
   } else {
-    res.json({ success: false, message: 'Must provide email & password to authenticate' });
+    res.json({ success: false, message: 'Must provide email & password to authenticate', message_code:'ERROR_SIGNIN_NO_EMAIL_PASSWORD' });
   }
 };
 
