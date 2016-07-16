@@ -248,60 +248,70 @@ function forgotpassword(req, res) {
   var lang = req.query.lang ? req.query.lang : "en";
 
   if (email) {
+    // Check if the email is from a valid user
+    User.findOne({
+      "email" : email,
+    }, function(err, user) {
+      if (err) {
+        res.json({ success: false, message: 'Error cheking for user', message_code:'ERROR_FORGOT_PASSWORD_CHEKING'});
+      } else if (!user) {
+        res.json({ success: false, message: 'Error,  not a valid user', message_code:'ERROR_FORGOT_PASSWORD_NON_USER'});
+      } else {
+        // Send email with password recovery instructions
+        var accessKey = process.env.AWS_ACCESS_KEY;
+        var secretKey = process.env.AWS_SECRET_KEY;
 
-    var accessKey = process.env.AWS_ACCESS_KEY;
-    var secretKey = process.env.AWS_SECRET_KEY;
-
-    // create a "password reset" jwt token
-    var payload = {
-      email : email,
-      resetpassword: true
-    }
-
-    var token = jwt.sign(payload, jwtSecret, {
-      expiresIn: "1 hour" // expires in 1 hour
-    });
-
-    var transport = nodemailer.createTransport(sesTransport({
-        accessKeyId: accessKey,
-        secretAccessKey: secretKey,
-        rateLimit: 5 // do not send more than 5 messages in a second
-    }));
-
-    var mailOptionsByLanguage = {
-      'en' : {
-        from: 'no_reply@firstmakers.com', // sender address
-        to: email, // list of receivers
-        subject: 'Firstmakers password reset', // Subject line
-        html: 'You are receiving this email because you (or someone else) have requested the reset of the password for your firstmakers account.<p><p>' +
-          'If you did not request this, please ignore this email and your password will remain unchanged.<p><p>'+
-          'To change your password, please follow <a href="https://firstmakers.s3.amazonaws.com/passwordreset/index.html#/resetpassword?lang=en&token='+ token +'">this link</a> which will be valid for 1 hour.\n',
-      },
-      'es' : {
-        from: 'no_reply@firstmakers.com', // sender address
-        to: email, // list of receivers
-        subject: 'Cambio de contraseña en Firstmakers', // Subject line
-        html: 'Está recibiendo este correo electrónico porque Ud. (u otra persona) solicitó un cambio de contraseña en su cuenta de Firstmakers.<p><p>' +
-          'Si usted no lo solicitó, por favor ignore este mensaje y su contraseña no será modificada.<p><p>'+
-          'Para cambiar su contraseña, haga clic en  <a href="https://firstmakers.s3.amazonaws.com/passwordreset/index.html#/resetpassword?lang=es&token='+ token +'">este enlace</a> (válido por 1 hora).\n',
-      }
-
-    }
-
-    var defaultLang = 'en';
-    var mailOptions = mailOptionsByLanguage[lang] ? mailOptionsByLanguage[lang] : mailOptionsByLanguage[defaultLang];
-
-    // send mail with defined transport object
-    transport.sendMail(mailOptions, function(error, info){
-        if(error){
-            res.send(error);
-            return console.log(error);
+        // create a "password reset" jwt token
+        var payload = {
+          email : email,
+          resetpassword: true
         }
-        res.json({ success: true, message: 'Message sent to '+email, message_code:'MESSAGE_SENT', 'email':email});
-    });
+
+        var token = jwt.sign(payload, jwtSecret, {
+          expiresIn: "1 hour" // expires in 1 hour
+        });
+
+        var transport = nodemailer.createTransport(sesTransport({
+            accessKeyId: accessKey,
+            secretAccessKey: secretKey,
+            rateLimit: 5 // do not send more than 5 messages in a second
+        }));
+
+        var mailOptionsByLanguage = {
+          'en' : {
+            from: 'no_reply@firstmakers.com', // sender address
+            to: email, // list of receivers
+            subject: 'Firstmakers password reset', // Subject line
+            html: 'You are receiving this email because you (or someone else) have requested the reset of the password for your firstmakers account.<p><p>' +
+              'If you did not request this, please ignore this email and your password will remain unchanged.<p><p>'+
+              'To change your password, please follow <a href="https://firstmakers.s3.amazonaws.com/passwordreset/index.html#/resetpassword?lang=en&token='+ token +'">this link</a> which will be valid for 1 hour.\n',
+          },
+          'es' : {
+            from: 'no_reply@firstmakers.com', // sender address
+            to: email, // list of receivers
+            subject: 'Cambio de contraseña en Firstmakers', // Subject line
+            html: 'Está recibiendo este correo electrónico porque Ud. (u otra persona) solicitó un cambio de contraseña en su cuenta de Firstmakers.<p><p>' +
+              'Si usted no lo solicitó, por favor ignore este mensaje y su contraseña no será modificada.<p><p>'+
+              'Para cambiar su contraseña, haga clic en  <a href="https://firstmakers.s3.amazonaws.com/passwordreset/index.html#/resetpassword?lang=es&token='+ token +'">este enlace</a> (válido por 1 hora).\n',
+          }
+        }
+
+        var defaultLang = 'en';
+        var mailOptions = mailOptionsByLanguage[lang] ? mailOptionsByLanguage[lang] : mailOptionsByLanguage[defaultLang];
+
+        // send mail with defined transport object
+        transport.sendMail(mailOptions, function(error, info){
+            if(error){
+                res.send(error);
+                return console.log(error);
+            }
+            res.json({ success: true, message: 'Message sent to '+email, message_code:'MESSAGE_SENT', 'email':email});
+        });
+      }
+    })
 
   } else {
-      res.json({ success: false, message: 'No usermail provided', message_code:'NO_EMAIL'});
+      res.json({ success: false, message: 'No usermail provided', message_code:'ERROR_FORGOT_PASSWORD_NO_EMAIL'});
   }
 
 };
