@@ -100,13 +100,13 @@ function signin(req, res) {
       if (err) throw err;
 
       if (!user) {
-        res.json({ success: false, message: 'Authentication failed. User not found.' });
+        res.json({ success: false, message: 'Authentication failed. User not found.' , message_code:'ERROR_INVALID_EMAIL'});
       } else if (user) {
 
         // check if password matches
         
         if (!bCrypt.compareSync(req.body.password,user.get('password'))) {
-          res.json({ success: false, message: 'Authentication failed. Wrong password.' });
+          res.json({ success: false, message: 'Authentication failed. Wrong password.', message_code:'ERROR_INVALID_PASSWORD' });
         } else {
 
           var payload = {
