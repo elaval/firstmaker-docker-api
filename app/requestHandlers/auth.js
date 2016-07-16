@@ -253,7 +253,7 @@ function forgotpassword(req, res) {
       "email" : email,
     }, function(err, user) {
       if (err) {
-        res.json({ success: false, message: 'Error cheking for user', message_code:'ERROR_FORGOT_PASSWORD_CHEKING'});
+        res.json({ success: false, message: 'Error cheking for user', message_code:'ERROR_FORGOT_PASSWORD_CHECKING'});
       } else if (!user) {
         res.json({ success: false, message: 'Error,  not a valid user', message_code:'ERROR_FORGOT_PASSWORD_NON_USER'});
       } else {
