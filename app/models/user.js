@@ -7,6 +7,8 @@ module.exports = mongoose.model('User', new Schema({
     username: String, 
     email: String, 
     password: String, 
-    admin: Boolean,
+    admin: { type: Boolean, default: false },
+    validated: { type: Boolean, default: false },
+    created: { type: Date, default: Date.now },
     refreshToken:String
 }));
