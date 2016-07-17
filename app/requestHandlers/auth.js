@@ -473,13 +473,14 @@ function activate(req, res) {
             },
             function(err) {
               if (err) {
-                res.json({ success: false, message: 'Could not validate the account', message_code:'ERROR_ACTIVATE', email:email });
+                res.json({ success: false, message: 'Could not validate the account', message_code:'ERROR_ACTIVATE'});
               } else {
                 // return the information including token as JSON
                 res.json({
                   success: true,
                   message: "Account activated",
-                  message_code:"ACTIVATED"
+                  message_code:"ACTIVATED",
+                  email:email 
                 });
               }
             })
