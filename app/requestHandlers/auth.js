@@ -158,8 +158,6 @@ function sendActivationEmail(email, lang, callback) {
 }
 
 
-      res.json({ success: true, message: 'Message sent to '+email, message_code:'MESSAGE_SENT', 'email':email});
-
 
 
 // POST /signin - authenticates an existing user, obtaining access & refresh tokens
