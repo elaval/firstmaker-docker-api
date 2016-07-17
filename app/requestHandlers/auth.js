@@ -121,7 +121,7 @@ function sendActivationEmail(email, lang, callback) {
   }
 
   var token = jwt.sign(payload, jwtSecret, {
-    expiresIn: "1 month" // expires in 1 month
+    expiresIn: "30 days" // expires in 1 month
   });
 
   var transport = nodemailer.createTransport(sesTransport({
