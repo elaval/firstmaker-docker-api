@@ -85,7 +85,10 @@ function signup(req, res) {
                       console.log('Error in Saving user: '+err);  
                       res.json({ success: false, message: 'Error in Saving user: '+err , message_code:'ERROR_SIGNUP_USER_SAVE_ERROR'});
                   }
-                  console.log('User Registration succesful');   
+                  console.log('User Registration succesful'); 
+                  res.json({ success: true, message: 'Succesful user registration' });
+
+                  /*  
                   sendActivationEmail(newUser.email, lang, function(err, info) {
                     if (err) {
                       res.json({ success: false, message: 'Failed to send authentication email' , message_code:'ERROR_SIGNUP_FAILED_ACTIVATION_EMAIL'});
@@ -94,6 +97,7 @@ function signup(req, res) {
                     }
 
                   })
+                  */
               });
             }
 
