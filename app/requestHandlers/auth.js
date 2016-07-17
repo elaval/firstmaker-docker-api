@@ -134,7 +134,7 @@ function sendActivationEmail(email, lang, callback) {
       subject: 'Firstmakers account activation', // Subject line
       html: 'Welcome to Firstmakers!<p><p>' +
         'To activate your new account, please open the following link in a Web browser:<p><p>'+
-        '<a href="https://firstmakers.s3.amazonaws.com/accountservices/index.html#/activate?lang=en&token='+ token +'">https://firstmakers.s3.amazonaws.com/accountactivation/index.html#/activate?lang=en&token='+ token +'</a><p><p>'+
+        '<a href="https://firstmakers.s3.amazonaws.com/accountservices/index.html#/activate?lang=en&token='+ token +'">https://firstmakers.s3.amazonaws.com/accountservices/index.html#/activate?lang=en&token='+ token +'</a><p><p>'+
         'This link will be valid for 7 days.\n',
     },
     'es' : {
@@ -143,7 +143,7 @@ function sendActivationEmail(email, lang, callback) {
       subject: 'Activación de cuenta Firstmakers', // Subject line
       html: '¡Bienvenido a Firstmakers!<p><p>' +
         'Para activar su nueva cuenta, abrir el siguiente enlace en un navegador Web:<p><p>'+
-        '<a href="https://firstmakers.s3.amazonaws.com/accountservices/index.html#/activate?lang=es&token='+ token +'">https://firstmakers.s3.amazonaws.com/accountactivation/index.html#/activate?lang=es&token='+token+'</a><p><p>'+
+        '<a href="https://firstmakers.s3.amazonaws.com/accountservices/index.html#/activate?lang=es&token='+ token +'">https://firstmakers.s3.amazonaws.com/accountservices/index.html#/activate?lang=es&token='+token+'</a><p><p>'+
         'Este enlace será válido por 7 días.\n',
     }
   }
@@ -358,6 +358,21 @@ function forgotpassword(req, res) {
             rateLimit: 5 // do not send more than 5 messages in a second
         }));
 
+/**
+ *       html: 'Welcome to Firstmakers!<p><p>' +
+        'To activate your new account, please open the following link in a Web browser:<p><p>'+
+        '<a href="https://firstmakers.s3.amazonaws.com/accountservices/index.html#/activate?lang=en&token='+ token +'">https://firstmakers.s3.amazonaws.com/accountactivation/index.html#/activate?lang=en&token='+ token +'</a><p><p>'+
+        'This link will be valid for 7 days.\n',
+    },
+    'es' : {
+      from: 'no_reply@firstmakers.com', // sender address
+      to: email, // list of receivers
+      subject: 'Activación de cuenta Firstmakers', // Subject line
+      html: '¡Bienvenido a Firstmakers!<p><p>' +
+        'Para activar su nueva cuenta, abrir el siguiente enlace en un navegador Web:<p><p>'+
+        '<a href="https://firstmakers.s3.amazonaws.com/accountservices/index.html#/activate?lang=es&token='+ token +'">https://firstmakers.s3.amazonaws.com/accountactivation/index.html#/activate?lang=es&token='+token+'</a><p><p>'+
+        'Este enlace será válido por 7 días.\n',
+ */
         var mailOptionsByLanguage = {
           'en' : {
             from: 'no_reply@firstmakers.com', // sender address
@@ -365,7 +380,9 @@ function forgotpassword(req, res) {
             subject: 'Firstmakers password reset', // Subject line
             html: 'You are receiving this email because you (or someone else) have requested the reset of the password for your firstmakers account.<p><p>' +
               'If you did not request this, please ignore this email and your password will remain unchanged.<p><p>'+
-              'To change your password, please follow <a href="https://firstmakers.s3.amazonaws.com/passwordreset/index.html#/resetpassword?lang=en&token='+ token +'">this link</a> which will be valid for 1 hour.\n',
+              'To change your password, please open the following link in a Web browser:<p><p>'+
+              '<a href="https://firstmakers.s3.amazonaws.com/accountservices/index.html#/resetpassword?lang=en&token='+ token +'">https://firstmakers.s3.amazonaws.com/accountservices/index.html#/resetpassword?lang=en&token='+ token +'</a><p><p>'+
+              'This link will be valid for 1 hour.\n',
           },
           'es' : {
             from: 'no_reply@firstmakers.com', // sender address
@@ -373,7 +390,9 @@ function forgotpassword(req, res) {
             subject: 'Cambio de contraseña en Firstmakers', // Subject line
             html: 'Está recibiendo este correo electrónico porque Ud. (u otra persona) solicitó un cambio de contraseña en su cuenta de Firstmakers.<p><p>' +
               'Si usted no lo solicitó, por favor ignore este mensaje y su contraseña no será modificada.<p><p>'+
-              'Para cambiar su contraseña, haga clic en  <a href="https://firstmakers.s3.amazonaws.com/passwordreset/index.html#/resetpassword?lang=es&token='+ token +'">este enlace</a> (válido por 1 hora).\n',
+              'Para cambiar su contraseña, abra el siguiente enlace en un navegador Web:<p><p>'+
+              '<a href="https://firstmakers.s3.amazonaws.com/accountservices/index.html#/resetpassword?lang=en&token='+ token +'">https://firstmakers.s3.amazonaws.com/accountservices/index.html#/resetpassword?lang=en&token='+ token +'</a><p><p>'+
+              'Este enlace será válido por 1 hora.\n',
           }
         }
 
