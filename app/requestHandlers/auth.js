@@ -134,7 +134,7 @@ function sendActivationEmail(email, lang, callback) {
       subject: 'Firstmakers account activation', // Subject line
       html: 'Welcome to Firstmakers!<p><p>' +
         'To activate your new account, please open the following link in a Web browser:<p><p>'+
-        '<a href="https://firstmakers.s3.amazonaws.com/accountactivation/index.html#/activate?lang=en&token='+ token +'">https://firstmakers.s3.amazonaws.com/accountactivation/index.html#/activate?lang=en&token='+ token +'</a><p><p>'+
+        '<a href="https://firstmakers.s3.amazonaws.com/accountservices/index.html#/activate?lang=en&token='+ token +'">https://firstmakers.s3.amazonaws.com/accountactivation/index.html#/activate?lang=en&token='+ token +'</a><p><p>'+
         'This link will be valid for 7 days.\n',
     },
     'es' : {
@@ -143,7 +143,7 @@ function sendActivationEmail(email, lang, callback) {
       subject: 'Activación de cuenta Firstmakers', // Subject line
       html: '¡Bienvenido a Firstmakers!<p><p>' +
         'Para activar su nueva cuenta, abrir el siguiente enlace en un navegador Web:<p><p>'+
-        '<a href="https://firstmakers.s3.amazonaws.com/accountactivation/index.html#/activate?lang=es&token='+ token +'">https://firstmakers.s3.amazonaws.com/accountactivation/index.html#/activate?lang=es&token='+token+'</a><p><p>'+
+        '<a href="https://firstmakers.s3.amazonaws.com/accountservices/index.html#/activate?lang=es&token='+ token +'">https://firstmakers.s3.amazonaws.com/accountactivation/index.html#/activate?lang=es&token='+token+'</a><p><p>'+
         'Este enlace será válido por 7 días.\n',
     }
   }
