@@ -96,6 +96,8 @@ authRoutes.post('/token/revoke', authHandlers.token_revoke);
 authRoutes.post('/token', authHandlers.token);
 authRoutes.post('/forgotpassword', authHandlers.forgotpassword);
 authRoutes.post('/resetpassword', authHandlers.resetpassword);
+authRoutes.post('/activate', authHandlers.activate);
+
 
 // API route middleware to verify a valid access_token for /api/* requests
 apiRoutes.use(authHandlers.token_validator);

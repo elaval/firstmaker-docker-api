@@ -443,6 +443,59 @@ function resetpassword(req, res) {
 
 };
 
+/**
+ * POST /activate - activates an account
+ * requires a valid activation token
+ * 
+ * Error codes:
+ * ERROR_ACTIVATE_INVALID_TOKEN
+ * ERROR_ACTIVATE
+ * ERROR_ACTIVATE_MISSING_TOKEN
+ */
+function activate(req, res) {
+  var activation_token = req.body.activation_token;
+
+  if (activation_token) {
+
+    // verifies secret and checks exp
+    jwt.verify(activation_token, jwtSecret, function(err, decoded) {      
+      if (err) {
+        return res.json({ success: false, message: 'Failed to verify token.', message_code:'ERROR_ACTIVATE_INVALID_TOKEN' });    
+      } else {
+        if (decoded && decoded.validationRequest) {
+          var email = decoded.email;
+
+          User.update({
+              "email": email
+            },
+            {
+              $set : {"validated":true}
+            },
+            function(err) {
+              if (err) {
+                res.json({ success: false, message: 'Could not validate the account', message_code:'ERROR_ACTIVATE', email:email });
+              } else {
+                // return the information including token as JSON
+                res.json({
+                  success: true,
+                  message: "Account activated",
+                  message_code:"ACTIVATED"
+                });
+              }
+            })
+        } else {
+          res.json({ success: flase, message: 'Not a reset password token', message_code:'ERROR_ACTIVATE_INVALID_TOKEN'});
+        }
+        
+      }
+    });
+  } else {
+      res.json({ success: false, message: 'Must provide activation token', message_code:'ERROR_ACTIVATE_MISSING_TOKEN'});
+  }
+
+};
+
+
 // token_validator
 // Middelware function that checks if a given token is valid
 
@@ -488,6 +541,7 @@ module.exports = {
     "token": token,
     "forgotpassword": forgotpassword,
     "resetpassword" : resetpassword,
+    "activate" : activate,
     "token_revoke": token_revoke,   
     "token_validator":  token_validator
 };
