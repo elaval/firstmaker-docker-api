@@ -53,12 +53,10 @@ function signup(req, res) {
 
       // In case of any error, return using the done method
       if (err){
-          console.log('Error in SignUp: '+err);
           res.json({ success: false, message: 'Error in SignUp: '+err , message_code:'ERROR_SIGNUP'});
       }
       // already exists
       else if (user) {
-          console.log('User already exists with username: '+username);
           res.json({ success: false, message: 'There is already a user with this email',  message_code:'ERROR_SIGNUP_EMAIL_EXISTS'});
       } else {
           // if there is no user with that email
@@ -82,13 +80,8 @@ function signup(req, res) {
               // save the user
               newUser.save(function(err) {
                   if (err){
-                      console.log('Error in Saving user: '+err);  
                       res.json({ success: false, message: 'Error in Saving user: '+err , message_code:'ERROR_SIGNUP_USER_SAVE_ERROR'});
-                  }
-                  console.log('User Registration succesful'); 
-                  res.json({ success: true, message: 'Succesful user registration' });
-
-                  /*  
+                  }                  
                   sendActivationEmail(newUser.email, lang, function(err, info) {
                     if (err) {
                       res.json({ success: false, message: 'Failed to send authentication email' , message_code:'ERROR_SIGNUP_FAILED_ACTIVATION_EMAIL'});
@@ -97,7 +90,7 @@ function signup(req, res) {
                     }
 
                   })
-                  */
+                  
               });
             }
 
@@ -387,7 +380,6 @@ function forgotpassword(req, res) {
         transport.sendMail(mailOptions, function(error, info){
             if(error){
                 res.send(error);
-                return console.log(error);
             }
             res.json({ success: true, message: 'Message sent to '+email, message_code:'MESSAGE_SENT', 'email':email});
         });
