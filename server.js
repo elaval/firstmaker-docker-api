@@ -55,7 +55,7 @@ var deviceHandlers = require("./app/requestHandlers/device");
 // =======================
 // configuration =========
 // =======================
-// Get config variables from ENVIRONMENT or from defaut config file
+// Get config variables from ENVIRONMENT or from default config file
 
 // Set up Mongo DB config
 var mongoDb = process.env.MONGO_DATABASE || config.database;

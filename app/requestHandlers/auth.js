@@ -36,11 +36,14 @@ function generateRefreshToken(username) {
  * ERROR_SIGNUP_USER_VALIDATION_FAILED
  * ERROR_SIGNUP_USER_SAVE_ERROR
  * ERROR_SIGNUP_LACK_EMAIL_USERNAME_PASSWORD
+ * ERROR_SIGNUP_FAILED_ACTIVATION_EMAIL
  */
 function signup(req, res) {
   var username = req.body.username,
     password = req.body.password,
     email = req.body.email;
+
+  var lang = req.query.lang ? req.query.lang : "en";
 
   if (username && email && password) {
    // find the user
@@ -83,7 +86,14 @@ function signup(req, res) {
                       res.json({ success: false, message: 'Error in Saving user: '+err , message_code:'ERROR_SIGNUP_USER_SAVE_ERROR'});
                   }
                   console.log('User Registration succesful');   
-                  res.json({ success: true, message: 'User Registration succesful' });
+                  sendActivationEmail(newUser.email, lang, function(err, info) {
+                    if (err) {
+                      res.json({ success: false, message: 'Failed to send authentication email' , message_code:'ERROR_SIGNUP_FAILED_ACTIVATION_EMAIL'});
+                    } else {
+                      res.json({ success: true, message: 'Succesful user registration' });
+                    }
+
+                  })
               });
             }
 
@@ -94,6 +104,63 @@ function signup(req, res) {
     res.json({ success: false, message: 'Must provide vaid email, username & password', message_code:'ERROR_SIGNUP_LACK_EMAIL_USERNAME_PASSWORD' });
   }
 };
+
+/**
+ * Sends an email to a new registerd user
+ * Includes a link to validate the account
+ */
+function sendActivationEmail(email, lang, callback) {
+
+  var accessKey = process.env.AWS_ACCESS_KEY;
+  var secretKey = process.env.AWS_SECRET_KEY;
+
+  // create a "validation" jwt token
+  var payload = {
+    email : email,
+    validationRequest: true
+  }
+
+  var token = jwt.sign(payload, jwtSecret, {
+    expiresIn: "1 month" // expires in 1 month
+  });
+
+  var transport = nodemailer.createTransport(sesTransport({
+      accessKeyId: accessKey,
+      secretAccessKey: secretKey,
+      rateLimit: 5 // do not send more than 5 messages in a second
+  }));
+
+  var mailOptionsByLanguage = {
+    'en' : {
+      from: 'no_reply@firstmakers.com', // sender address
+      to: email, // list of receivers
+      subject: 'Firstmakers account activation', // Subject line
+      html: 'Welcome to Firstmakers!<p><p>' +
+        'To activate your new account, please follow  <a href="https://firstmakers.s3.amazonaws.com/accountactivation/index.html#/activate?lang=en&token='+ token +'">this link</a> which will be valid for 1 month.\n',
+    },
+    'es' : {
+      from: 'no_reply@firstmakers.com', // sender address
+      to: email, // list of receivers
+      subject: 'Firstmakers account activation', // Subject line
+      html: '¡Bienvenido a Firstmakers!<p><p>' +
+        'Para activar su nueva cuenta, por favor ir a,  <a href="https://firstmakers.s3.amazonaws.com/accountactivation/index.html#/activate?lang=en&token='+ token +'">este enlace</a> que será válido por un mes.\n',
+    }
+  }
+
+  var defaultLang = 'en';
+  var mailOptions = mailOptionsByLanguage[lang] ? mailOptionsByLanguage[lang] : mailOptionsByLanguage[defaultLang];
+
+  // send mail with defined transport object
+  transport.sendMail(mailOptions, function(error, info){
+    callback(error, info);
+  });
+
+}
+
+
+      res.json({ success: true, message: 'Message sent to '+email, message_code:'MESSAGE_SENT', 'email':email});
+
+
 
 // POST /signin - authenticates an existing user, obtaining access & refresh tokens
 // Requires password & email as data params
